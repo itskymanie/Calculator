@@ -1,68 +1,107 @@
-const display = document.querySelector("#display");
+let display = document.querySelector("#display");
+let currentInput = "";
+let firstNumber = null;
+let secondNumber = null;
+let operator = null;
+let resultDisplayed = false;
 
-const content = document.createElement("div");
-content.classList.add("content");
+const add = (a, b) => a + b;
+const subtract = (a, b) => a - b;
+const multiply = (a, b) => a * b;
+const divide = (a, b) => b === 0 ? "ERROR" : a / b;
 
-display.appendChild(content);
-var left = null;
-var right = null;
-var operator = null;
-
-function calculateResult() {
-    if(left != null  && right != null && operator) {
-        let result;
-        switch(operator) {
+const operate = (operator, num1, num2) => {
+    switch (operator) {
         case "+":
-            result = add(left, right);
-            break;
+            return add(num1, num2);
         case "-":
-            result = subtract(left,right);
-            break;
+            return subtract(num1, num2);
         case "*":
-            result = multiply(left, right);
-            break;
+            return multiply(num1, num2);
         case "/":
-            result = divide(left, right);
-            break;
+            return divide(num1, num2);
         default:
-            console.log("why we hitting the default.")
-        }
-        display.innerText = result;
-        left = result;
-        right = null;
-        operator = null;
+            return null;
     }
-}
+};
 
-function add(left, right) {
-    return left + right;
-}
+const updateDisplay = (value) => {
+    display.innerText = value;
+};
 
-function subtract (left, right) {
-    return left - right;
-}
-
-function multiply( left , right){
-    return left * right;
-} 
-
-function divide (left , right) {
-    return left / right;
-}
-
-function appendToDisplay(value) {
-    if (typeof(value) === "number") {
-        display.innerText= value;
-        if(left === -1) {
-            left = value;
-        }
-        else {
-            right = value;
-        }
+const handleDigitInput = (digit) => {
+    if (resultDisplayed) {
+        currentInput = digit;
+        resultDisplayed = false;
     } else {
-        operator = value;
-
+        currentInput += digit;
     }
-}
+    updateDisplay(currentInput);
+};
 
+const handleOperatorInput = (op) => {
+    if (currentInput === "") return;
 
+    if (firstNumber === null) {
+        firstNumber = parseFloat(currentInput);
+        operator = op;
+        currentInput = "";
+    } else if (operator !== null) {
+        secondNumber = parseFloat(currentInput);
+        firstNumber = operate(operator, firstNumber, secondNumber);
+        updateDisplay(firstNumber);
+        operator = op;
+        currentInput = "";
+    }
+};
+
+const handleEquals = () => {
+    if (currentInput === "" || operator === null) return;
+
+    secondNumber = parseFloat(currentInput);
+    const result = operate(operator, firstNumber, secondNumber);
+    updateDisplay(result);
+    firstNumber = result;
+    currentInput = "";
+    operator = null;
+    resultDisplayed = true;
+};
+
+const handleClear = () => {
+    firstNumber = null;
+    secondNumber = null;
+    operator = null;
+    currentInput = "";
+    updateDisplay("0");
+    resultDisplayed = false;
+};
+
+const handleBackspace = () => {
+    currentInput = currentInput.slice(0, -1);
+    if (currentInput === "") {
+        updateDisplay("0");
+    } else {
+        updateDisplay(currentInput);
+    }
+};
+
+const handleDecimal = () => {
+    if (!currentInput.includes(".")) {
+        currentInput += ".";
+        updateDisplay(currentInput);
+    }
+};
+
+// Button event listeners
+document.querySelectorAll(".digit").forEach(button => {
+    button.addEventListener("click", () => handleDigitInput(button.innerText));
+});
+
+document.querySelectorAll(".operator").forEach(button => {
+    button.addEventListener("click", () => handleOperatorInput(button.innerText));
+});
+
+document.querySelector(".equals").addEventListener("click", handleEquals);
+document.querySelector(".clear").addEventListener("click", handleClear);
+document.querySelector(".backspace").addEventListener("click", handleBackspace);
+document.querySelector(".decimal").addEventListener("click", handleDecimal);
