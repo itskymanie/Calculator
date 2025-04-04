@@ -1,107 +1,119 @@
-let display = document.querySelector("#display");
-let currentInput = "";
-let firstNumber = null;
-let secondNumber = null;
-let operator = null;
-let resultDisplayed = false;
+const display = document.querySelector("#display");
 
-const add = (a, b) => a + b;
-const subtract = (a, b) => a - b;
-const multiply = (a, b) => a * b;
-const divide = (a, b) => b === 0 ? "ERROR" : a / b;
+const content = document.createElement("div");
+content.classList.add("content");
 
-const operate = (operator, num1, num2) => {
-    switch (operator) {
-        case "+":
-            return add(num1, num2);
-        case "-":
-            return subtract(num1, num2);
-        case "*":
-            return multiply(num1, num2);
-        case "/":
-            return divide(num1, num2);
-        default:
-            return null;
+display.appendChild(content);
+var left = null;
+var right = null;
+var operator = null;
+var resetDisplay = false;
+
+function calculateResult() {
+    if (left !== null && right !== null && operator) {
+        let result;
+        switch (operator) {
+            case "+":
+                result = add(left, right);
+                break;
+            case "-":
+                result = subtract(left, right);
+                break;
+            case "*":
+                result = multiply(left, right);
+                break;
+            case "/":
+                if (right === 0) {
+                    display.innerText = "Error: Divide by zero";
+                    resetAfterDelay();
+                    return;
+                }
+                result = divide(left, right);
+                break;
+            default:
+                console.log("Unexpected operator.");
+                return;
+        }
+        
+        result = roundResult(result); // Ensure result is rounded properly
+        display.innerText = result;
+        left = result;  // Use result as new 'left' for next operation
+        right = null;
+        operator = null;
+        resetDisplay = true; // Flag to prevent overwriting with new numbers
     }
-};
+}
 
-const updateDisplay = (value) => {
-    display.innerText = value;
-};
+function add(left, right) {
+    return left + right;
+}
 
-const handleDigitInput = (digit) => {
-    if (resultDisplayed) {
-        currentInput = digit;
-        resultDisplayed = false;
+function subtract(left, right) {
+    return left - right;
+}
+
+function multiply(left, right) {
+    return left * right;
+}
+
+function divide(left, right) {
+    return left / right;
+}
+
+function roundResult(value) {
+    if (Number.isInteger(value)) {
+        return value; // Keep integers unchanged
+    }
+    return Number(value.toFixed(5)); // Round to 5 decimal places and remove trailing zeros
+}
+
+function appendToDisplay(value) {
+    // If a number is pressed after a result was just shown
+    if (resetDisplay) {
+        if (typeof value === "number") {
+            // Start new expression entirely
+            display.innerText = value.toString();
+            left = value;
+            right = null;
+            operator = null;
+        } else {
+            // Continue operation with result as left
+            display.innerText += " " + value + " ";
+            operator = value;
+        }
+        resetDisplay = false;
+        return;
+    }
+
+    if (typeof value === "number") {
+        display.innerText += value;
+        if (operator === null) {
+            left = left === null ? value : left * 10 + value;
+        } else {
+            right = right === null ? value : right * 10 + value;
+        }
     } else {
-        currentInput += digit;
+        if (left !== null && operator === null) {
+            operator = value;
+            display.innerText += " " + value + " ";
+        } else if (operator !== null && right !== null) {
+            calculateResult(); // result becomes new left
+            operator = value;
+            display.innerText += " " + value + " ";
+        }
     }
-    updateDisplay(currentInput);
-};
+}
 
-const handleOperatorInput = (op) => {
-    if (currentInput === "") return;
 
-    if (firstNumber === null) {
-        firstNumber = parseFloat(currentInput);
-        operator = op;
-        currentInput = "";
-    } else if (operator !== null) {
-        secondNumber = parseFloat(currentInput);
-        firstNumber = operate(operator, firstNumber, secondNumber);
-        updateDisplay(firstNumber);
-        operator = op;
-        currentInput = "";
-    }
-};
 
-const handleEquals = () => {
-    if (currentInput === "" || operator === null) return;
-
-    secondNumber = parseFloat(currentInput);
-    const result = operate(operator, firstNumber, secondNumber);
-    updateDisplay(result);
-    firstNumber = result;
-    currentInput = "";
+function clearDisplay() {
+    display.innerText = "";
+    left = null;
+    right = null;
     operator = null;
-    resultDisplayed = true;
-};
+    resetDisplay = false;
+}
 
-const handleClear = () => {
-    firstNumber = null;
-    secondNumber = null;
-    operator = null;
-    currentInput = "";
-    updateDisplay("0");
-    resultDisplayed = false;
-};
-
-const handleBackspace = () => {
-    currentInput = currentInput.slice(0, -1);
-    if (currentInput === "") {
-        updateDisplay("0");
-    } else {
-        updateDisplay(currentInput);
-    }
-};
-
-const handleDecimal = () => {
-    if (!currentInput.includes(".")) {
-        currentInput += ".";
-        updateDisplay(currentInput);
-    }
-};
-
-// Button event listeners
-document.querySelectorAll(".digit").forEach(button => {
-    button.addEventListener("click", () => handleDigitInput(button.innerText));
-});
-
-document.querySelectorAll(".operator").forEach(button => {
-    button.addEventListener("click", () => handleOperatorInput(button.innerText));
-});
-
-document.querySelector(".equals").addEventListener("click", handleEquals);
-document.querySelector(".clear").addEventListener("click", handleClear);
-document.querySelector(".backspace").addEventListener("click", handleBackspace);
-document.querySelector(".decimal").addEventListener("click", handleDecimal);
+function resetAfterDelay() {
+    setTimeout(clearDisplay, 1500);
+}
