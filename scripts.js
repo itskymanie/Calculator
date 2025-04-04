@@ -136,7 +136,6 @@ document.addEventListener("keydown", (event) => {
         // If the key is an operator
         handleOperatorInput(key);
     } else if (key === "Enter" || key === "=") {
-        // If Enter or = is pressed, evaluate the expression
         handleEquals();
     } else if (key === "Backspace") {
         // Handle backspace to remove the last digit
