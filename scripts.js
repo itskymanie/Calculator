@@ -8,7 +8,7 @@ let resultDisplayed = false;
 const add = (a, b) => a + b;
 const subtract = (a, b) => a - b;
 const multiply = (a, b) => a * b;
-const divide = (a, b) => b === 0 ? "ERROR" : a / b;
+const divide = (a, b) => b === 0 ? "Nice try. NOOB." : a / b;
 
 const operate = (operator, num1, num2) => {
     switch (operator) {
@@ -30,7 +30,8 @@ const updateDisplay = (value) => {
 };
 
 const handleDigitInput = (digit) => {
-    if (resultDisplayed) {
+    
+    if (resultDisplayed ) {
         currentInput = digit;
         resultDisplayed = false;
         firstNumber = null; 
@@ -43,20 +44,36 @@ const handleDigitInput = (digit) => {
 
 
 const handleOperatorInput = (op) => {
-    if (currentInput === "") return;
+    // If a result was just displayed, allow continuing the operation
+    if (resultDisplayed) {
+        resultDisplayed = false;
+    }
 
-    if (firstNumber === null) {
-        firstNumber = parseFloat(currentInput);
+    // If no new number is entered, just update the operator
+    if (currentInput === "" && firstNumber !== null) {
         operator = op;
-        currentInput = "";
-    } else if (operator !== null) {
-        secondNumber = parseFloat(currentInput);
-        firstNumber = operate(operator, firstNumber, secondNumber);
-        updateDisplay(firstNumber);
+        return;
+    }
+
+    // If a number is entered, process it
+    if (currentInput !== "") {
+        let number = parseFloat(currentInput);
+
+        if (firstNumber === null) {
+            // Set the first number if it hasn't been set yet
+            firstNumber = number;
+        } else if (operator !== null) {
+            // If an operation already exists, calculate the result
+            firstNumber = operate(operator, firstNumber, number);
+            updateDisplay(firstNumber);
+        }
+
+        // Store the new operator and reset input for next number
         operator = op;
         currentInput = "";
     }
 };
+
 
 const handleEquals = () => {
     if (currentInput === "" || operator === null) return;
@@ -108,3 +125,27 @@ document.querySelector(".equals").addEventListener("click", handleEquals);
 document.querySelector(".clear").addEventListener("click", handleClear);
 document.querySelector(".backspace").addEventListener("click", handleBackspace);
 document.querySelector(".decimal").addEventListener("click", handleDecimal);
+
+document.addEventListener("keydown", (event) => {
+    const key = event.key;
+
+    if (!isNaN(key)) {
+        
+        handleDigitInput(key);
+    } else if (["+", "-", "*", "/"].includes(key)) {
+        // If the key is an operator
+        handleOperatorInput(key);
+    } else if (key === "Enter" || key === "=") {
+        // If Enter or = is pressed, evaluate the expression
+        handleEquals();
+    } else if (key === "Backspace") {
+        // Handle backspace to remove the last digit
+        handleBackspace();
+    } else if (key === "Escape") {
+        // Clear the calculator when Escape is pressed
+        handleClear();
+    } else if (key === ".") {
+        // Allow decimal input
+        handleDecimal();
+    }
+});
